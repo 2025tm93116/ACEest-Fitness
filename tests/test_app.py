@@ -6,7 +6,9 @@ def test_health(client):
 def test_home(client):
     response = client.get("/")
     assert response.status_code == 200
-    assert "ACEest Fitness" in response.get_json()["message"]
+    assert b"ACEest Fitness" in response.data
+    assert b"client-form" in response.data
+    assert b"program-form" in response.data
 
 def test_create_and_list_client(client):
     response = client.post("/clients", json={"name": "Asha", "email": "asha@example.com"})
