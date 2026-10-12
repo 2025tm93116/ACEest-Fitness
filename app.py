@@ -1,7 +1,8 @@
 import os
 import sqlite3
 from pathlib import Path
-from flask import Flask, jsonify, request, g, render_template
+
+from flask import Flask, g, jsonify, render_template, request
 
 app = Flask(__name__)
 app.config["DATABASE"] = os.environ.get("DATABASE_PATH", str(Path("instance") / "aceest.db"))
