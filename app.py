@@ -1,7 +1,7 @@
 import os
 import sqlite3
 from pathlib import Path
-from flask import Flask, jsonify, request, g
+from flask import Flask, jsonify, request, g, render_template
 
 app = Flask(__name__)
 app.config["DATABASE"] = os.environ.get("DATABASE_PATH", str(Path("instance") / "aceest.db"))
@@ -43,7 +43,7 @@ with app.app_context():
 
 @app.get("/")
 def home():
-    return jsonify({"message": "Welcome to ACEest Fitness & Gym"})
+    return render_template("index.html")
 
 @app.get("/health")
 def health():

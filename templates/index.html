@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ACEest Fitness &amp; Gym</title>
+  <style>
+    :root { color-scheme: light; --navy:#14213d; --blue:#2563eb; --bg:#f3f6fb; --line:#dbe3ef; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:system-ui,-apple-system,Segoe UI,sans-serif; background:var(--bg); color:#172033; }
+    header { background:var(--navy); color:white; padding:28px max(20px,calc((100% - 1050px)/2)); }
+    header h1 { margin:0 0 5px; font-size:clamp(1.5rem,4vw,2.1rem); }
+    header p { margin:0; color:#dbeafe; }
+    main { max-width:1050px; margin:24px auto; padding:0 18px 36px; }
+    .status { padding:12px 14px; border-radius:10px; background:#e0f2fe; margin-bottom:18px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; }
+    section { background:white; border:1px solid var(--line); border-radius:14px; padding:20px; box-shadow:0 5px 18px #14213d0a; }
+    h2 { margin:0 0 14px; font-size:1.15rem; }
+    form { display:grid; gap:10px; margin-bottom:18px; }
+    input, textarea, button { width:100%; border-radius:8px; font:inherit; padding:10px 12px; }
+    input, textarea { border:1px solid #cbd5e1; background:white; }
+    textarea { min-height:75px; resize:vertical; }
+    button { border:0; background:var(--blue); color:white; font-weight:650; cursor:pointer; }
+    button:hover { filter:brightness(.94); }
+    button.secondary { width:auto; padding:7px 10px; background:#e8eef8; color:var(--navy); }
+    ul { list-style:none; padding:0; margin:0; display:grid; gap:9px; }
+    li { border:1px solid var(--line); border-radius:9px; padding:10px 12px; overflow-wrap:anywhere; }
+    .muted { color:#64748b; font-size:.92rem; }
+    .section-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+    .section-heading h2 { margin:0; }
+    #notice { margin:0 0 16px; font-weight:600; }
+    #notice.error { color:#b91c1c; } #notice.success { color:#166534; }
+    footer { text-align:center; color:#64748b; padding:0 18px 24px; font-size:.9rem; }
+  </style>
+</head>
+<body>
+  <header><h1>ACEest Fitness &amp; Gym</h1><p>Simple dashboard for clients and fitness programs</p></header>
+  <main>
+    <div class="status" id="health">Checking API status…</div>
+    <p id="notice" role="status" aria-live="polite"></p>
+    <div class="grid">
+      <section>
+        <h2>Add a client</h2>
+        <form id="client-form">
+          <label for="client-name">Full name</label><input id="client-name" name="name" required maxlength="100" placeholder="e.g. Asha Patil">
+          <label for="client-email">Email address</label><input id="client-email" name="email" type="email" required maxlength="254" placeholder="asha@example.com">
+          <button type="submit">Add client</button>
+        </form>
+        <div class="section-heading"><h2>Clients</h2><button class="secondary" id="refresh-clients" type="button">Refresh</button></div>
+        <ul id="clients-list"><li class="muted">Loading clients…</li></ul>
+      </section>
+      <section>
+        <h2>Add a fitness program</h2>
+        <form id="program-form">
+          <label for="program-name">Program name</label><input id="program-name" name="name" required maxlength="100" placeholder="e.g. Strength Basics">
+          <label for="program-description">Description</label><textarea id="program-description" name="description" maxlength="500" placeholder="Short summary of the program"></textarea>
+          <button type="submit">Add program</button>
+        </form>
+        <div class="section-heading"><h2>Fitness programs</h2><button class="secondary" id="refresh-programs" type="button">Refresh</button></div>
+        <ul id="programs-list"><li class="muted">Loading programs…</li></ul>
+      </section>
+    </div>
+  </main>
+  <footer>ACEest Fitness demo · Data is stored in the app's SQLite database</footer>
+<script>
+  const notice = document.querySelector('#notice');
+  function showNotice(message, isError=false) {
+    notice.textContent = message;
+    notice.className = isError ? 'error' : 'success';
+  }
+  async function api(path, options={}) {
+    const response = await fetch(path, {headers:{'Content-Type':'application/json'}, ...options});
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
+    return data;
+  }
+  function addTextElement(parent, tag, text, className='') {
+    const element = document.createElement(tag);
+    element.textContent = text;
+    if (className) element.className = className;
+    parent.appendChild(element);
+    return element;
+  }
+  async function loadClients() {
+    const list = document.querySelector('#clients-list'); list.replaceChildren();
+    try {
+      const clients = await api('/clients');
+      if (!clients.length) return addTextElement(list, 'li', 'No clients yet. Add your first client above.', 'muted');
+      clients.forEach(client => {
+        const item = document.createElement('li');
+        addTextElement(item, 'strong', client.name);
+        addTextElement(item, 'div', client.email, 'muted');
+        addTextElement(item, 'small', `Client #${client.id}`, 'muted');
+        list.appendChild(item);
+      });
+    } catch (error) { addTextElement(list, 'li', error.message, 'muted'); }
+  }
+  async function loadPrograms() {
+    const list = document.querySelector('#programs-list'); list.replaceChildren();
+    try {
+      const programs = await api('/programs');
+      if (!programs.length) return addTextElement(list, 'li', 'No programs yet. Add a fitness program above.', 'muted');
+      programs.forEach(program => {
+        const item = document.createElement('li');
+        addTextElement(item, 'strong', program.name);
+        addTextElement(item, 'div', program.description || 'No description provided.', 'muted');
+        addTextElement(item, 'small', `Program #${program.id}`, 'muted');
+        list.appendChild(item);
+      });
+    } catch (error) { addTextElement(list, 'li', error.message, 'muted'); }
+  }
+  async function checkHealth() {
+    const status = document.querySelector('#health');
+    try { await api('/health'); status.textContent = 'API status: online'; }
+    catch (_) { status.textContent = 'API status: unavailable. Try refreshing the page.'; }
+  }
+  document.querySelector('#client-form').addEventListener('submit', async event => {
+    event.preventDefault(); const form = event.currentTarget;
+    const payload = Object.fromEntries(new FormData(form));
+    try { const client = await api('/clients', {method:'POST', body:JSON.stringify(payload)}); showNotice(`Added client: ${client.name}`); form.reset(); await loadClients(); }
+    catch (error) { showNotice(error.message, true); }
+  });
+  document.querySelector('#program-form').addEventListener('submit', async event => {
+    event.preventDefault(); const form = event.currentTarget;
+    const payload = Object.fromEntries(new FormData(form));
+    try { const program = await api('/programs', {method:'POST', body:JSON.stringify(payload)}); showNotice(`Added program: ${program.name}`); form.reset(); await loadPrograms(); }
+    catch (error) { showNotice(error.message, true); }
+  });
+  document.querySelector('#refresh-clients').addEventListener('click', loadClients);
+  document.querySelector('#refresh-programs').addEventListener('click', loadPrograms);
+  checkHealth(); loadClients(); loadPrograms();
+</script>
+</body>
+</html>

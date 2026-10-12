@@ -1,15 +1,20 @@
 # ACEest Fitness & Gym
 
-Flask REST API with SQLite persistence for clients and fitness programs. The database is created automatically on startup. Set `DATABASE_PATH` to change its location.
+Flask + SQLite API with a basic browser UI for managing clients and fitness programs, Pytest coverage, and Docker support.
 
-## Run
+## Local run
 
 ```bash
-python -m venv .venv
-# Windows: .venv\Scripts\Activate.ps1
-# macOS/Linux: source .venv/bin/activate
 python -m pip install -r requirements.txt
 python app.py
+python -m pytest -v
 ```
 
-Example client request: `POST /clients` with `{"name":"Asha","email":"asha@example.com"}`. Programs use `POST /programs` with `{"name":"Strength","description":"Three sessions per week"}`.
+## Docker
+
+```bash
+docker build -t aceest-fitness:local .
+docker run --rm -p 5000:5000 -v aceest-data:/data aceest-fitness:local
+```
+
+Open `http://localhost:5000/` for the UI. The dashboard uses `GET/POST /clients` and `GET/POST /programs`; `/health` reports API status. The named volume preserves the SQLite database. Run tests locally with `python -m pytest -v`.
