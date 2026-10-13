@@ -30,10 +30,17 @@ pipeline {
             }
         }
 
+        
         stage('Pytest') {
             steps {
-                sh '.venv/bin/pytest -v'
+                sh '''
+                    echo "Workspace: $WORKSPACE"
+                    ls -la "$WORKSPACE"
+                    export PYTHONPATH="$WORKSPACE"
+                    .venv/bin/python -m pytest -v
+                '''
             }
         }
+
     }
 }
