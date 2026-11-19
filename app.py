@@ -1,10 +1,12 @@
 import os
 import sqlite3
 from pathlib import Path
+import re
 
 from flask import Flask, g, jsonify, render_template, request
 
 app = Flask(__name__)
+APP_VERSION = "1.1.0"
 app.config["DATABASE"] = os.environ.get("DATABASE_PATH", str(Path("instance") / "aceest.db"))
 
 
@@ -49,6 +51,13 @@ def home():
 @app.get("/health")
 def health():
     return jsonify({"status": "ok"}), 200
+
+@app.get("/version")
+def version():
+    return jsonify({
+        "application": "ACEest Fitness",
+        "version": APP_VERSION
+    }), 200
 
 @app.get("/clients")
 def list_clients():
