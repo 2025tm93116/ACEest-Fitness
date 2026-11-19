@@ -1,7 +1,7 @@
 import os
+import re
 import sqlite3
 from pathlib import Path
-import re
 
 from flask import Flask, g, jsonify, render_template, request
 
