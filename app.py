@@ -66,11 +66,26 @@ def list_clients():
 
 @app.post("/clients")
 def create_client():
-    payload = request.get_json(silent=True) or {}
-    name = payload.get("name", "")
-    email = payload.get("email", "")
-    if not isinstance(name, str) or not name.strip() or not isinstance(email, str) or not email.strip():
-        return jsonify({"error": "name and email are required"}), 400
+    
+    payload = request.get_json(silent=True)
+
+    if not isinstance(payload, dict):
+        return jsonify({"error": "valid JSON object is required"}), 400
+
+    name = payload.get("name")
+    email = payload.get("email")
+
+    if not isinstance(name, str) or not name.strip():
+        return jsonify({"error": "valid name is required"}), 400
+
+    if not isinstance(email, str) or not email.strip():
+        return jsonify({"error": "valid email is required"}), 400
+
+    name = name.strip()
+    email = email.strip().lower()
+
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+        return jsonify({"error": "invalid email format"}), 400
     try:
         db = get_db()
         cursor = db.execute("INSERT INTO clients (name, email) VALUES (?, ?)", (name.strip(), email.strip().lower()))
