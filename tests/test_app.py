@@ -38,3 +38,71 @@ def test_create_and_list_program(client):
 
 def test_program_requires_name(client):
     assert client.post("/programs", json={"description": "No name"}).status_code == 400
+
+def test_version_endpoint(client):
+    response = client.get("/version")
+    assert response.status_code == 200
+    assert response.get_json() == {
+        "application": "ACEest Fitness",
+        "version": "1.1.0"
+    }
+
+
+def test_client_email_is_normalized(client):
+    response = client.post(
+        "/clients",
+        json={
+            "name": " Asha ",
+            "email": " ASHA@EXAMPLE.COM "
+        }
+    )
+
+    assert response.status_code == 201
+    assert response.get_json()["name"] == "Asha"
+    assert response.get_json()["email"] == "asha@example.com"
+
+
+def test_invalid_email_is_rejected(client):
+    response = client.post(
+        "/clients",
+        json={
+            "name": "Asha",
+            "email": "invalid-email"
+        }
+    )
+
+    assert response.status_code == 400
+
+
+def test_empty_client_name_is_rejected(client):
+    response = client.post(
+        "/clients",
+        json={
+            "name": "   ",
+            "email": "asha@example.com"
+        }
+    )
+
+    assert response.status_code == 400
+
+
+def test_non_json_client_payload_is_rejected(client):
+    response = client.post(
+        "/clients",
+        data="invalid",
+        content_type="text/plain"
+    )
+
+    assert response.status_code == 400
+
+
+def test_program_description_must_be_text(client):
+    response = client.post(
+        "/programs",
+        json={
+            "name": "Strength",
+            "description": 123
+        }
+    )
+
+    assert response.status_code == 400
