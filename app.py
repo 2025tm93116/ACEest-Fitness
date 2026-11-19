@@ -109,9 +109,23 @@ def list_programs():
 
 @app.post("/programs")
 def create_program():
-    payload = request.get_json(silent=True) or {}
-    name = payload.get("name", "")
+    payload = request.get_json(silent=True)
+
+    if not isinstance(payload, dict):
+        return jsonify({"error": "valid JSON object is required"}), 400
+
+    name = payload.get("name")
     description = payload.get("description", "")
+
+    if not isinstance(name, str) or not name.strip():
+        return jsonify({"error": "valid program name is required"}), 400
+
+    if not isinstance(description, str):
+        return jsonify({"error": "description must be text"}), 400
+
+    name = name.strip()
+    description = description.strip()
+    
     if not isinstance(name, str) or not name.strip() or not isinstance(description, str):
         return jsonify({"error": "name is required and description must be text"}), 400
     db = get_db()
