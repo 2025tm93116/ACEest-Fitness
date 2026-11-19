@@ -5,3 +5,6 @@ __pycache__/
 instance/
 *.db
 .env
+.ruff_cache/
+.coverage
+htmlcov/
