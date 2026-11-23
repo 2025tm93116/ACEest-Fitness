@@ -30,7 +30,6 @@ pipeline {
             }
         }
 
-        
         stage('Pytest') {
             steps {
                 sh '''
@@ -68,5 +67,41 @@ pipeline {
             }
         }
 
+        stage('Docker Build and Push') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKERHUB_USER',
+                        passwordVariable: 'DOCKERHUB_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        set -eu
+
+                        IMAGE_REPO="${DOCKERHUB_USER}/aceest-fitness"
+                        IMAGE_TAG="1.0-${BUILD_NUMBER}"
+
+                        echo "Building Docker image: ${IMAGE_REPO}:${IMAGE_TAG}"
+
+                        echo "$DOCKERHUB_TOKEN" | docker login \
+                            --username "$DOCKERHUB_USER" \
+                            --password-stdin
+
+                        trap 'docker logout >/dev/null 2>&1 || true' EXIT
+
+                        docker build \
+                            -t "${IMAGE_REPO}:${IMAGE_TAG}" \
+                            -t "${IMAGE_REPO}:latest" \
+                            .
+
+                        docker push "${IMAGE_REPO}:${IMAGE_TAG}"
+                        docker push "${IMAGE_REPO}:latest"
+
+                        echo "Docker image published successfully."
+                    '''
+                }
+            }
+        }
     }
 }
