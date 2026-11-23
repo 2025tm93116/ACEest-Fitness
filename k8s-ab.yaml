@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-ab-a
+spec:
+  type: NodePort
+  selector:
+    app: aceest-fitness
+    track: stable
+  ports:
+    - port: 5000
+      targetPort: 5000
+      nodePort: 30082
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-ab-b
+spec:
+  type: NodePort
+  selector:
+    app: aceest-fitness
+    track: canary
+  ports:
+    - port: 5000
+      targetPort: 5000
+      nodePort: 30083
